@@ -11,25 +11,45 @@ def getCountry(ipAddress):
     cll.append(resJ.get("longitude"))
     return cll
 
+IPs = []
 
-#API wiki - edit history
-r=requests.get("https://en.wikipedia.org/w/index.php?title=Application_programming_interface&action=history")
-soup=BeautifulSoup(r.text,"lxml")
-history=soup.find("ul",{"id":"pagehistory"})
-data = history.find_all("li")
-
-lis=[]
-for items in data:
-
+count = 20161116094830
+while(len(IPs) < 300):
     try:
-        #IP - mw-userlink mw-anonuserlink
-        #username - mw-userlink
-        lis.append(items.find("a",{"class","mw-userlink mw-anonuserlink"}).text)
+        if count == 0:
+            url = "https://en.wikipedia.org/w/index.php?title=Application_programming_interface&action=history"
+        else:
+
+            url = "https://en.wikipedia.org/w/index.php?title=Application_programming_interface&dir=prev&offset={}&action=history".format(count)
+            count +=1
+        r=requests.get(url)
+        #soup=BeautifulSoup(r.content,"html.parser")
+        soup=BeautifulSoup(r.text,"lxml")
+        history=soup.find("ul",{"id":"pagehistory"})
+        data = history.find_all("li")
+
+        for items in data:
+
+            try:
+                #IP - mw-userlink mw-anonuserlink
+                #username - mw-userlink
+                IPs.append(items.find("a",{"class","mw-userlink mw-anonuserlink"}).text)
+            except:
+                print("")
+
     except:
-        print("")
-print("IPAddress is :" +lis[0])
+        break
+
+print(IPs)
+print(len(IPs))
 
 
-print("country code :"+ getCountry(lis[0])[0])
-print("latitude :"+ str(getCountry(lis[0])[1]))
-print("longitude :"+ str(getCountry(lis[0])[2]))
+leng= len(IPs)-1
+
+for data in IPs:
+    if leng >= 0:
+        print("country code :"+ getCountry(IPs[leng])[0])
+        print("latitude :"+ str(getCountry(IPs[leng])[1]))
+        print("longitude :"+ str(getCountry(IPs[leng])[2]))
+
+    leng -=1
