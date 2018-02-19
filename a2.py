@@ -1,15 +1,25 @@
 import json
+import pandas
 import requests
 from bs4 import BeautifulSoup
+# get key from config
+import config
 
-def getCountry(ipAddress):
+def getCLL(ipAddress):
     response = requests.get("http://freegeoip.net/json/"+ipAddress)
     resJ = json.loads(response.text)
     cll=[]
     cll.append(resJ.get("country_code"))
     cll.append(resJ.get("latitude"))
     cll.append(resJ.get("longitude"))
+
     return cll
+
+def getTimezone(lat,lon):
+    venus = config.config['apikey']
+    response = requests.get("https://maps.googleapis.com/maps/api/timezone/json?location="+str(lat)+","+str(lon)+"&timestamp=1331161200&key="+venus)
+    resJ = json.loads(response.text)
+    return resJ.get("timeZoneName")
 
 IPs = []
 
@@ -40,16 +50,21 @@ while(len(IPs) < 300):
     except:
         break
 
-print(IPs)
-print(len(IPs))
+#print(IPs)
+#print(len(IPs))
 
-
+big_lis=[]
 leng= len(IPs)-1
-
 for data in IPs:
+    d={}
     if leng >= 0:
-        print("country code :"+ getCountry(IPs[leng])[0])
-        print("latitude :"+ str(getCountry(IPs[leng])[1]))
-        print("longitude :"+ str(getCountry(IPs[leng])[2]))
-
+        d["IP Address"] = IPs[leng]
+        d["country code"]= getCLL(IPs[leng])[0]
+        d["latitude"]= getCLL(IPs[leng])[1]
+        d["longitude"]= getCLL(IPs[leng])[2]
+        d["timeZoneName"] = getTimezone((getCLL(IPs[leng])[1]),(getCLL(IPs[leng])[2]))
+    big_lis.append(d)
     leng -=1
+
+df=pandas.DataFrame(big_lis)
+df.to_csv("api.csv")
